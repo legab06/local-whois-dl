@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import io
 import shutil
-import zipfile
 from pathlib import Path
 
 import streamlit as st
@@ -33,15 +31,6 @@ def human_size(value: int) -> str:
     return f"{value} o"
 
 
-@st.cache_data(show_spinner=False)
-def create_test_zip() -> bytes:
-    """Create a small, self-contained ZIP for download diagnostics."""
-    output = io.BytesIO()
-    with zipfile.ZipFile(output, mode="w", compression=zipfile.ZIP_STORED) as archive:
-        archive.writestr("fichier-test-1mio.bin", b"\x00" * (1024 * 1024))
-    return output.getvalue()
-
-
 def clear_previous_bundle() -> None:
     workdir = st.session_state.pop("workdir", None)
     st.session_state.pop("archive_path", None)
@@ -64,16 +53,6 @@ with st.expander("Sources téléchargées", expanded=False):
     for source in SOURCES:
         st.markdown(f"- **{source.filename}** — {source.label}")
     st.caption("Toutes les URLs sont figées dans l'application et utilisent ftp.ripe.net en HTTPS.")
-
-st.caption("Diagnostic téléchargement — fichier factice, sans données WHOIS.")
-st.download_button(
-    "Télécharger le ZIP de test (1 Mio)",
-    data=create_test_zip(),
-    file_name="whoami-test-1mio.zip",
-    mime="application/zip",
-    use_container_width=True,
-    on_click="ignore",
-)
 
 progress_bar = st.empty()
 current_file = st.empty()
@@ -140,6 +119,13 @@ if archive_value:
                 type="primary",
                 use_container_width=True,
             )
+        st.caption(
+            "ℹ️ Si votre connexion passe par le proxy Orion, la fenêtre "
+            "d'enregistrement d'un gros ZIP peut mettre 1 à 2 minutes "
+            "à apparaître après le clic. Ce délai a aussi été observé "
+            "sur d'autres archives volumineuses : évitez de cliquer "
+            "plusieurs fois."
+        )
 
 st.divider()
 st.caption(
